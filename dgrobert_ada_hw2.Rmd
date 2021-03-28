@@ -38,5 +38,27 @@ d <- filter(d, runtimeMinutes >= 60 & runtimeMinutes <= 180)
 b<-c(-Inf, 1930, 1940, 1950, 1960, 1970, Inf)
 names<-c("twenties", "thirties", "fourties", "fifties", "sixties", "seventies")
 d$decade<-cut(d$startYear, breaks=b, labels=names)
-glimpse(d)
-str(d)
+
+
+
+p<-ggplot(data=d, aes(x=runtimeMinutes)) + 
+  geom_histogram(color="black", fill="white", binwidth=10)+
+    xlab("runtime (minutes)") +
+    ylab("count")
+p <- p + facet_wrap(~decade)
+p
+
+
+results<-d %>%
+  group_by(decade) %>%
+  summarise_at(vars(runtimeMinutes), funs(mean(., na.rm=TRUE), sd(.,              na.rm=TRUE)))
+
+s <- d %>% group_by(decade) %>% sample_n(size=100, replace=FALSE)
+
+s_results<-s %>%
+  group_by(decade) %>%
+  summarise_at(vars(runtimeMinutes), funs(mean(., na.rm=TRUE), sd(.,              na.rm=TRUE)))
+  
+s_results$SEM<-s_results$sd/sqrt(100)
+
+view(s_results)
