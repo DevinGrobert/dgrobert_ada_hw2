@@ -63,4 +63,19 @@ s_results$SEM<-s_results$sd/sqrt(100)
 
 view(s_results)
 
+library(mosaic)
+n<-100
+reps <- 1000
+samp_dist_mean_sd <-
+  do(reps) * mean(~runtimeMinutes, data = d %>% group_by(decade) %>%sample_n(size = n, replace = FALSE))+
+  sd(~runtimeMinutes, data = d %>% group_by(decade) %>%sample_n(size = n, replace = FALSE))
 
+mean(~mean, data = samp_dist_mean_sd)
+sd(~mean, data = samp_dist_mean_sd)
+
+mean_plot <-
+  histogram(~mean,
+    data = samp_dist_mean_sd,
+    xlab = "Sampling Distribution for the\nMean of runtime"
+  )
+mean_plot
