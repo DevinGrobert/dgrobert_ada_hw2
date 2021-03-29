@@ -30,17 +30,21 @@ plot(pressure)
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 
 library(tidyverse)
+library(mosaic)
+library(psych)
 
+#read in the data
 f <- "https://raw.githubusercontent.com/difiore/ada-2021-datasets/main/IMDB-movies.csv"
 d <- read_csv(f, col_names = TRUE)
+#filter for movies from the 1920's- 1970's between 1 and 3 hrs long
 d <- filter(d, startYear %in% 1920:1979)
 d <- filter(d, runtimeMinutes >= 60 & runtimeMinutes <= 180)
+#create "decade" variable
 b<-c(-Inf, 1930, 1940, 1950, 1960, 1970, Inf)
 names<-c("twenties", "thirties", "fourties", "fifties", "sixties", "seventies")
 d$decade<-cut(d$startYear, breaks=b, labels=names)
 
-
-
+#plot histogram of the distribution of runtime (in 10 minute bins) for each decade
 p<-ggplot(data=d, aes(x=runtimeMinutes)) + 
   geom_histogram(color="black", fill="white", binwidth=10)+
     xlab("runtime (minutes)") +
@@ -48,34 +52,44 @@ p<-ggplot(data=d, aes(x=runtimeMinutes)) +
 p <- p + facet_wrap(~decade)
 p
 
-
+#"results" includes population mean and sd of runtime or each decade
 results<-d %>%
   group_by(decade) %>%
   summarise_at(vars(runtimeMinutes), funs(mean(., na.rm=TRUE), sd(.,              na.rm=TRUE)))
 
+#sample of 100 movies from each decade
 s <- d %>% group_by(decade) %>% sample_n(size=100, replace=FALSE)
 
+#sample mean and sd of runtime for each decade
 s_results<-s %>%
   group_by(decade) %>%
   summarise_at(vars(runtimeMinutes), funs(mean(., na.rm=TRUE), sd(.,              na.rm=TRUE)))
-  
+#sample standard error of the mean (SEM) for each decade 
 s_results$SEM<-s_results$sd/sqrt(100)
 
-view(s_results)
-
-library(mosaic)
+#sampling distribution: 1000 samples of 100 movies from each decade with mean and sd for each sample
 n<-100
 reps <- 1000
-samp_dist_mean_sd <-
-  do(reps) * mean(~runtimeMinutes, data = d %>% group_by(decade) %>%sample_n(size = n, replace = FALSE))+
-  sd(~runtimeMinutes, data = d %>% group_by(decade) %>%sample_n(size = n, replace = FALSE))
 
-mean(~mean, data = samp_dist_mean_sd)
-sd(~mean, data = samp_dist_mean_sd)
+samp_dist <-
+  do(reps) * d %>% 
+  group_by(decade) %>% 
+  sample_n(size=n, replace=FALSE)%>%
+  summarise_at(vars(runtimeMinutes), funs(mean(., na.rm=TRUE), sd(.,              na.rm=TRUE)))
+  
+#mean and sd of sample means for each decade
+samp_dist_results<-samp_dist %>%
+  group_by(decade) %>%
+  summarise_at(vars(mean), funs(mean(., na.rm=TRUE)))
+  
+samp_dist_results$sd<-samp_dist %>%
+  group_by(decade) %>%
+  summarise_at(vars(mean), funs(sd(., na.rm=TRUE)))
 
-mean_plot <-
+#histogram of the sampling distribution
+samp_dist_plot <-
   histogram(~mean,
-    data = samp_dist_mean_sd,
+    data = samp_dist,
     xlab = "Sampling Distribution for the\nMean of runtime"
   )
-mean_plot
+samp_dist_plot
