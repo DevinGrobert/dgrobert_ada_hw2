@@ -121,5 +121,5 @@ compare_all<-inner_join(compare,samp_dist_results, by = "decade")
 
 compare_all$dist_se<-compare_all$dist_sd/sqrt(1000)
 
-CHALLENGE 2 
+CHALLENGE 2
 
