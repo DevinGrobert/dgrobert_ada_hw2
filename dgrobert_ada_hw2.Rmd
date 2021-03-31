@@ -32,6 +32,7 @@ Note that the `echo = FALSE` parameter was added to the code chunk to prevent pr
 library(tidyverse)
 library(mosaic)
 library(psych)
+library(cowplot)
 
 
 CHALLENGE 1
@@ -122,4 +123,126 @@ compare_all<-inner_join(compare,samp_dist_results, by = "decade")
 compare_all$dist_se<-compare_all$dist_sd/sqrt(1000)
 
 CHALLENGE 2
+#probability that the bee biologist sees 9 bees or fewer
+ppois(9, lambda=12)
+#probability that the bee biologist sees 0 bees
+ppois(0, lambda=12)
+#probability that she sees exactly 5 bees
+dpois(5, lambda=12)
+#probability that she sees more than 18
+ppois(18, lambda=12, lower=FALSE)
+#plot fr the Poisson mass function for values 0 to 24
+l <- 12
+p1 <-
+  plotDist(
+    "pois",
+    lambda = l,
+    kind = "cdf",
+    main = paste0("Cumulative Probability\nwith lambda=", l),
+    xlab = "x",
+    ylab = "Pr(X≤x)",
+    type = "l"
+  )
+plot_grid(p1)
+#simulate 1460 results
+s<-rpois(1460, 12)
+#plot simulation
+s_plot<-histogram(s,
+    type = "density",
+    main = paste("Histogram of Outcomes of ", 1460, " Bee Sessions", sep = ""),
+    xlab = "count",
+    ylab = "Probability",
+    xlim = 0:24
+  )
+#plots of the simulation and of the mass function are consistent, with about 50% cumulative probability reached at the mean (12) and about 100% reached at double the mean (24)
+
+#CHALLENGE 3
+#read in zombie data
+z <- "https://raw.githubusercontent.com/difiore/ada-2021-datasets/master/zombies.csv"
+d <- read_csv(z, col_names = TRUE)
+#mean for each quantitative variables
+m<-c((mean(d$height)), (mean(d$weight)),  (mean(d$age)), (mean(d$zombies_killed)), (mean(d$years_of_education)))
+#create a function for pop sd
+pop.sd <- function(x){sd(x)*sqrt((length(x)-1)/length(x))}
+#pop sd for quantitative variables
+sd <- c((pop.sd(d$height)), (pop.sd(d$weight)),  (pop.sd(d$age)), (pop.sd(d$zombies_killed)), (pop.sd(d$years_of_education)))
+#boxplots for quantitative variables
+hp <- ggplot(data = d, aes(x = gender, y = height)) +
+  geom_boxplot(na.rm = TRUE, outlier.shape = NA) 
+hp
+wp <- ggplot(data = d, aes(x = gender, y = weight)) +
+  geom_boxplot(na.rm = TRUE, outlier.shape = NA) 
+wp
+ap <- ggplot(data = d, aes(x = gender, y = age)) +
+  geom_boxplot(na.rm = TRUE, outlier.shape = NA) 
+ap
+zkp <- ggplot(data = d, aes(x = gender, y = zombies_killed)) +
+  geom_boxplot(na.rm = TRUE, outlier.shape = NA) 
+zkp
+sp <- ggplot(data = d, aes(x = gender, y = years_of_education)) +
+  geom_boxplot(na.rm = TRUE, outlier.shape = NA) 
+sp
+#scatterplot of height in relation to age, gender by point color
+sh <- ggplot(data = d, aes(
+  x = age,
+  y = height,
+  color = factor(gender)
+)) 
+sh <- sh + geom_point(na.rm = TRUE)
+sh
+
+#scatterplots of weight in relation to age, gender by point color
+sw <- ggplot(data = d, aes(
+  x = age,
+  y = weight,
+  color = factor(gender)
+)) 
+sw <- sw + geom_point(na.rm = TRUE)
+sw
+#both weight and height appear to be positively correlated to age, average values for both appear to be higher for males than females
+
+#qq plot for height
+qqnorm(d$height)
+qqline(d$height, col = "gray")
+#histo for height
+histogram(d$height,
+    type = "density",
+ )
+#height looks normal
+
+#qq plot for weight
+qqnorm(d$weight)
+qqline(d$weight, col = "gray")
+#histo for weight
+histogram(d$weight,
+    type = "density",
+ )
+#weight looks normal
+
+#qq plot for age
+qqnorm(d$age)
+qqline(d$age, col = "gray")
+#histo for age
+histogram(d$age,
+    type = "density",
+ )
+#age looks normal
+
+#qq plot for zombies killed
+qqnorm(d$zombies_killed)
+qqline(d$zombies_killed, col = "gray")
+#histo for zombies killed
+histogram(d$zombies_killed,
+    type = "density",
+ )
+#zombies killed NOT normal, looks like binomial
+
+#qq plot for skoolin
+qqnorm(d$years_of_education)
+qqline(d$years_of_education, col = "gray")
+#histo for skoolin
+histogram(d$years_of_education,
+    type = "density",
+ )
+#years of education NOT normal, looks like binomial
 
