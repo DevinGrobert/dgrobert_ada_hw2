@@ -246,3 +246,4 @@ histogram(d$years_of_education,
  )
 #years of education NOT normal, looks like binomial
 
+
