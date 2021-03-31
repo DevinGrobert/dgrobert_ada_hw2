@@ -7,70 +7,64 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
-
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
-
 library(tidyverse)
 library(mosaic)
 library(psych)
 library(cowplot)
+```
 
-
-CHALLENGE 1
+#CHALLENGE 1
 #read in the data
+```
 f <- "https://raw.githubusercontent.com/difiore/ada-2021-datasets/main/IMDB-movies.csv"
 d <- read_csv(f, col_names = TRUE)
+```
 #filter for movies from the 1920's- 1970's between 1 and 3 hrs long
+```
 d <- filter(d, startYear %in% 1920:1979)
 d <- filter(d, runtimeMinutes >= 60 & runtimeMinutes <= 180)
+```
 #create "decade" variable
+```
 b<-c(-Inf, 1930, 1940, 1950, 1960, 1970, Inf)
 names<-c("twenties", "thirties", "fourties", "fifties", "sixties", "seventies")
 d$decade<-cut(d$startYear, breaks=b, labels=names)
+```
 
 #plot histogram of the distribution of runtime (in 10 minute bins) for each decade
+```
 p<-ggplot(data=d, aes(x=runtimeMinutes)) + 
   geom_histogram(color="black", fill="white", binwidth=10)+
     xlab("runtime (minutes)") +
     ylab("count")
 p <- p + facet_wrap(~decade)
 p
+```
 
 #"results" includes population mean and sd of runtime or each decade
+```
 results<-d %>%
   group_by(decade) %>%
   summarise_at(vars(runtimeMinutes), funs(mean(., na.rm=TRUE), sd(.,              na.rm=TRUE)))
+```
 
 #sample of 100 movies from each decade
+```
 s <- d %>% group_by(decade) %>% sample_n(size=100, replace=FALSE)
-
+```
 #sample mean and sd of runtime for each decade
+```
 s_results<-s %>%
   group_by(decade) %>%
   summarise_at(vars(runtimeMinutes), funs(mean(., na.rm=TRUE), sd(.,              na.rm=TRUE)))
+```
 #sample standard error of the mean (SEM) for each decade 
+```
 s_results$SEM<-s_results$sd/sqrt(100)
+```
 
 #compare sample estimates of sd, m, and SEM with population estimates of same and SE in the pop mean for n=100
+```
 compare<-inner_join(s_results,results, by = "decade")
 compare<-compare%>%
   rename(
@@ -81,9 +75,10 @@ compare<-compare%>%
   pop_sd = sd.y,
   )
 compare$pop_se<-compare$pop_sd/sqrt(100)
-View(compare)
+```
 
 #sampling distribution: 1000 samples of 100 movies from each decade with mean and sd for each sample
+```
 n<-100
 reps <- 1000
 
@@ -92,8 +87,10 @@ samp_dist <-
   group_by(decade) %>% 
   sample_n(size=n, replace=FALSE)%>%
   summarise_at(vars(runtimeMinutes), funs(mean(., na.rm=TRUE), sd(.,              na.rm=TRUE)))
-  
+```
+
 #mean and sd of sample means for each decade
+```
 samp_dist_results_mean<-samp_dist %>%
   group_by(decade) %>%
   summarise_at(vars(mean), funs(mean(., na.rm=TRUE)))
@@ -108,30 +105,43 @@ samp_dist_results<-samp_dist_results%>%
   rename(
   dist_mean=mean.x,
   dist_sd=mean.y)
-  
+```  
+
 #histograms of the sampling distributions for each decade
+```
 samp_dist_plot<-ggplot(data=samp_dist, aes(x=mean)) + 
   geom_histogram(color="black", fill="white", binwidth=1)+
     xlab("mean") +
     ylab("count")
 samp_dist_plot <- samp_dist_plot + facet_wrap(~decade)
 samp_dist_plot
+```
 
 #compare SE from each decade from initial sample, from known pop, and from samp distribution of means
+```
 compare_all<-inner_join(compare,samp_dist_results, by = "decade")
 
 compare_all$dist_se<-compare_all$dist_sd/sqrt(1000)
-
-CHALLENGE 2
+```
+#CHALLENGE 2
 #probability that the bee biologist sees 9 bees or fewer
+```
 ppois(9, lambda=12)
+```
 #probability that the bee biologist sees 0 bees
+```
 ppois(0, lambda=12)
+```
 #probability that she sees exactly 5 bees
+```
 dpois(5, lambda=12)
+```
 #probability that she sees more than 18
+```
 ppois(18, lambda=12, lower=FALSE)
+```
 #plot fr the Poisson mass function for values 0 to 24
+```
 l <- 12
 p1 <-
   plotDist(
@@ -144,9 +154,15 @@ p1 <-
     type = "l"
   )
 plot_grid(p1)
+```
+
 #simulate 1460 results
+```
 s<-rpois(1460, 12)
+```
+
 #plot simulation
+```
 s_plot<-histogram(s,
     type = "density",
     main = paste("Histogram of Outcomes of ", 1460, " Bee Sessions", sep = ""),
@@ -154,19 +170,30 @@ s_plot<-histogram(s,
     ylab = "Probability",
     xlim = 0:24
   )
+```
+
 #plots of the simulation and of the mass function are consistent, with about 50% cumulative probability reached at the mean (12) and about 100% reached at double the mean (24)
 
 #CHALLENGE 3
 #read in zombie data
+```{r}
 z <- "https://raw.githubusercontent.com/difiore/ada-2021-datasets/master/zombies.csv"
 d <- read_csv(z, col_names = TRUE)
+```
 #mean for each quantitative variables
+```{r}
 m<-c((mean(d$height)), (mean(d$weight)),  (mean(d$age)), (mean(d$zombies_killed)), (mean(d$years_of_education)))
+```
 #create a function for pop sd
+```{r}
 pop.sd <- function(x){sd(x)*sqrt((length(x)-1)/length(x))}
+```
 #pop sd for quantitative variables
+```{r}
 sd <- c((pop.sd(d$height)), (pop.sd(d$weight)),  (pop.sd(d$age)), (pop.sd(d$zombies_killed)), (pop.sd(d$years_of_education)))
+```
 #boxplots for quantitative variables
+```{r}
 hp <- ggplot(data = d, aes(x = gender, y = height)) +
   geom_boxplot(na.rm = TRUE, outlier.shape = NA) 
 hp
@@ -182,7 +209,10 @@ zkp
 sp <- ggplot(data = d, aes(x = gender, y = years_of_education)) +
   geom_boxplot(na.rm = TRUE, outlier.shape = NA) 
 sp
+```
+
 #scatterplot of height in relation to age, gender by point color
+```{r}
 sh <- ggplot(data = d, aes(
   x = age,
   y = height,
@@ -190,8 +220,9 @@ sh <- ggplot(data = d, aes(
 )) 
 sh <- sh + geom_point(na.rm = TRUE)
 sh
-
+```
 #scatterplots of weight in relation to age, gender by point color
+```{r}
 sw <- ggplot(data = d, aes(
   x = age,
   y = weight,
@@ -199,51 +230,162 @@ sw <- ggplot(data = d, aes(
 )) 
 sw <- sw + geom_point(na.rm = TRUE)
 sw
+```
 #both weight and height appear to be positively correlated to age, average values for both appear to be higher for males than females
 
 #qq plot for height
+```{r}
 qqnorm(d$height)
 qqline(d$height, col = "gray")
+```
+
 #histo for height
+```{r}
 histogram(d$height,
     type = "density",
  )
+```
 #height looks normal
 
 #qq plot for weight
+```{r}
 qqnorm(d$weight)
 qqline(d$weight, col = "gray")
+```
+
 #histo for weight
+```{r}
 histogram(d$weight,
     type = "density",
  )
+```
+
 #weight looks normal
 
 #qq plot for age
+```{r}
 qqnorm(d$age)
 qqline(d$age, col = "gray")
+```
 #histo for age
+```{r}
 histogram(d$age,
     type = "density",
  )
+```
 #age looks normal
 
 #qq plot for zombies killed
+```{r}
 qqnorm(d$zombies_killed)
 qqline(d$zombies_killed, col = "gray")
+```
 #histo for zombies killed
+```{r}
 histogram(d$zombies_killed,
     type = "density",
  )
+```
 #zombies killed NOT normal, looks like binomial
 
 #qq plot for skoolin
+```{r}
 qqnorm(d$years_of_education)
 qqline(d$years_of_education, col = "gray")
+```
 #histo for skoolin
+```{r}
 histogram(d$years_of_education,
     type = "density",
  )
+```
 #years of education NOT normal, looks like binomial
 
+#generate subset of 50 survivors, calculate sd and mean
+```{r}
+s <- d %>% sample_n(size=50, replace=FALSE)
+avg_h<- mean(s$height)
+avg_w<- mean(s$weight)
+avg_a<- mean(s$age)
+avg_zk<- mean(s$zombies_killed)
+avg_ye<- mean(s$years_of_education)
+sd_h<- sd(s$height)
+sd_w<- sd(s$weight)
+sd_a<- sd(s$age)
+sd_zk<- sd(s$zombies_killed)
+sd_ye<- sd(s$years_of_education)
+```
+#create function for sample standard error of the mean
+```{r}
+sem <- function(x) sd(x)/sqrt(length(x))
+```
 
+#calculate sem for each quantitative variable
+```{r}
+sem_h<- sem(s$height)
+sem_w<- sem(s$weight)
+sem_a<- sem(s$age)
+sem_zk<- sem(s$zombies_killed)
+sem_ye<- sem(s$years_of_education)
+```
+#create a function to calculate 95% confidence intervals
+```{r}
+CI <- function(x, level = 0.95) {
+  alpha <- 1 - level
+  ci <- mean(x) + c(-1, 1) * qnorm(1 - (alpha / 2)) * sqrt(var(x) / length(x))
+  return(ci)
+}
+```
+#calculate 95% confidence intervals for each variable
+```{r}
+ci_h<- CI(s$height)
+ci_w<- CI(s$weight)
+ci_a<- CI(s$age)
+ci_zk<- CI(s$zombies_killed)
+ci_ye<- CI(s$years_of_education)
+```
+#draw 99 more samples of 50, calculate means
+```{r}
+n<-50
+reps <- 99
+
+samp_dist <-
+  do(reps) * d %>% 
+  sample_n(size=n, replace=FALSE)%>%
+  summarise_at(vars(height, weight, age, zombies_killed, years_of_education), funs(mean(., na.rm=TRUE)))
+samp_dist$.row<-NULL
+samp_dist$.index<-NULL
+```  
+#combine with that initial sample
+```{r}
+initial_samp<-c(avg_h, avg_w, avg_a, avg_zk, avg_ye)
+names(initial_samp)<-c("height", "weight", "age", "zombies_killed", "years_of_education")
+samp_dist<-rbind(samp_dist, initial_samp)
+view(samp_dist)  
+```
+#calculate mean and sd for sampling distribution
+```{r}
+samp_dist_results_mean<-samp_dist %>%
+  summarise_at(vars(height, weight, age, zombies_killed, years_of_education), funs(mean(., na.rm=TRUE)))
+  
+samp_dist_results_sd<-samp_dist %>%
+  summarise_at(vars(height, weight, age, zombies_killed, years_of_education), funs(sd(., na.rm=TRUE)))
+
+samp_dist_results<-inner_join(samp_dist_results_mean, samp_dist_results_sd)
+```
+#construct 95% CI for each mean from the sampling distribution of sample means
+```{r}
+samp_dist_ci_h<- CI(samp_dist$height)
+samp_dist_ci_w<- CI(samp_dist$weight)
+samp_dist_ci_a<- CI(samp_dist$age)
+samp_dist_ci_zk<- CI(samp_dist$zombies_killed)
+samp_dist_ci_ye<- CI(samp_dist$years_of_education)
+samp_dist_ci<-c(samp_dist_ci_h, samp_dist_ci_w, samp_dist_ci_a, samp_dist_ci_zk, samp_dist_ci_ye)
+```
+#how do these compare to the initial sample?
+```{r}
+view(samp_dist_ci)
+initial_sample_ci<-c(ci_h, ci_w, ci_a, ci_zk, ci_ye)
+view(initial_sample_ci)
+```
+# the confidence intervals form the sampling distribution are much tighter
